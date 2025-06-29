@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Professional E-Bill</title>
+  <title>E-Bill Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      margin: 0;
       background-color: #f4f4f4;
       padding: 20px;
       display: flex;
@@ -38,7 +37,6 @@
       border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 14px;
-      box-sizing: border-box;
     }
 
     button {
@@ -73,24 +71,19 @@
       background-color: #eaeaea;
     }
 
-    tfoot td {
-      font-weight: bold;
+    .info-table td {
+      border: none;
+      padding: 4px 8px;
     }
 
-    .bill-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 20px;
-      margin-bottom: 15px;
+    tfoot td {
+      font-weight: bold;
     }
 
     @media (max-width: 600px) {
       button {
         width: 100%;
         margin-bottom: 10px;
-      }
-      .bill-grid {
-        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -105,18 +98,23 @@
   <input type="text" id="itemTitle" placeholder="Item Title" />
   <input type="number" id="itemPrice" placeholder="Item Price (₹)" />
   <button onclick="addItem()">➕ Add Item</button>
-  <button onclick="generatePDF()">💾 Download PDF & Open WhatsApp</button>
+  <button onclick="generatePDF()">💾 Download & Send WhatsApp</button>
 </div>
 
 <!-- ✅ BILL SECTION -->
 <div id="bill">
   <h2>🧾 Customer E-Bill</h2>
-  <div class="bill-grid">
-    <div><strong>Name:</strong> <span id="displayName">--</span></div>
-    <div><strong>Date:</strong> <span id="displayDate">--</span></div>
-    <div><strong>Number:</strong> <span id="displayNumber">--</span></div>
-    <div><strong>Time:</strong> <span id="displayTime">--</span></div>
-  </div>
+  <!-- Compatible layout for both screen and PDF -->
+  <table class="info-table">
+    <tr>
+      <td><strong>Name:</strong> <span id="displayName">--</span></td>
+      <td><strong>Date:</strong> <span id="displayDate">--</span></td>
+    </tr>
+    <tr>
+      <td><strong>Number:</strong> <span id="displayNumber">--</span></td>
+      <td><strong>Time:</strong> <span id="displayTime">--</span></td>
+    </tr>
+  </table>
 
   <table>
     <thead>
@@ -139,6 +137,7 @@
 <script>
   let count = 1;
   let total = 0;
+  let customerNumber = '';
 
   function setDateTime() {
     const now = new Date();
@@ -163,9 +162,18 @@
       return;
     }
 
+    if (number.length !== 10 || isNaN(number)) {
+      alert("Enter valid 10-digit number.");
+      return;
+    }
+
     if (count === 1) setDateTime();
+
     if (name) document.getElementById('displayName').innerText = name;
-    if (number) document.getElementById('displayNumber').innerText = "+91 " + number;
+    if (number) {
+      customerNumber = number;
+      document.getElementById('displayNumber').innerText = "+91 " + number;
+    }
 
     const table = document.getElementById('itemTable');
     const row = table.insertRow();
@@ -190,8 +198,13 @@
     };
 
     html2pdf().from(bill).set(opt).save().then(() => {
-      const msg = encodeURIComponent("Hi, your bill is ready.");
-      window.open(`https://wa.me/?text=${msg}`, "_blank");
+      const msg = encodeURIComponent("Hi, your bill is ready. Please find the attached PDF.");
+      if (customerNumber) {
+        // Open WhatsApp with specific number
+        window.open(`https://wa.me/91${customerNumber}?text=${msg}`, "_blank");
+      } else {
+        alert("Customer number not found for WhatsApp.");
+      }
     });
   }
 </script>
