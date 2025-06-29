@@ -77,17 +77,11 @@
       font-weight: bold;
     }
 
-    .bill-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+    .bill-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 20px;
       margin-bottom: 15px;
-    }
-
-    .bill-left, .bill-right {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
     }
 
     @media (max-width: 600px) {
@@ -95,9 +89,8 @@
         width: 100%;
         margin-bottom: 10px;
       }
-      .bill-header {
-        flex-direction: column;
-        gap: 10px;
+      .bill-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -118,15 +111,11 @@
 <!-- ✅ BILL SECTION -->
 <div id="bill">
   <h2>🧾 Customer E-Bill</h2>
-  <div class="bill-header">
-    <div class="bill-left">
-      <p><strong>Name:</strong> <span id="displayName">--</span></p>
-      <p><strong>Number:</strong> <span id="displayNumber">--</span></p>
-    </div>
-    <div class="bill-right">
-      <p><strong>Date:</strong> <span id="displayDate">--</span></p>
-      <p><strong>Time:</strong> <span id="displayTime">--</span></p>
-    </div>
+  <div class="bill-grid">
+    <div><strong>Name:</strong> <span id="displayName">--</span></div>
+    <div><strong>Date:</strong> <span id="displayDate">--</span></div>
+    <div><strong>Number:</strong> <span id="displayNumber">--</span></div>
+    <div><strong>Time:</strong> <span id="displayTime">--</span></div>
   </div>
 
   <table>
@@ -201,7 +190,7 @@
     };
 
     html2pdf().from(bill).set(opt).save().then(() => {
-      const msg = encodeURIComponent("Hi, your bill is ready. Please check your downloads and send the attached PDF via WhatsApp.");
+      const msg = encodeURIComponent("Hi, your bill is ready.");
       window.open(`https://wa.me/?text=${msg}`, "_blank");
     });
   }
