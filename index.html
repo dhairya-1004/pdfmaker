@@ -2,31 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>E-Bill Generator</title>
+  <title>Professional E-Bill</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Courier New', monospace;
       margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #8e9eab, #eef2f3);
+      background-color: #f4f4f4;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
-      box-sizing: border-box;
     }
 
     #form-section, #bill {
-      background: #ffffff;
+      background: #fff;
       padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ddd;
       width: 100%;
       max-width: 700px;
+      margin-bottom: 25px;
       box-sizing: border-box;
-      margin-bottom: 30px;
     }
 
     h2 {
@@ -37,49 +34,47 @@
     input {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
+      margin: 6px 0;
+      border-radius: 4px;
       border: 1px solid #ccc;
+      font-size: 14px;
       box-sizing: border-box;
     }
 
     button {
-      padding: 10px 20px;
-      margin: 10px 8px 0 0;
+      padding: 10px 15px;
+      margin: 10px 5px 0 0;
+      background-color: #333;
+      color: #fff;
       border: none;
-      border-radius: 8px;
-      background-color: #4CAF50;
-      color: white;
+      border-radius: 4px;
+      font-size: 14px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
 
     button:hover {
-      background-color: #45a049;
+      background-color: #555;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
-      border-radius: 10px;
-      overflow: hidden;
     }
 
     th, td {
-      padding: 12px;
-      text-align: center;
-      word-break: break-word;
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
     }
 
     th {
-      background-color: #4CAF50;
-      color: white;
+      background-color: #eaeaea;
     }
 
     tfoot td {
       font-weight: bold;
-      background-color: #f4f4f4;
     }
 
     @media (max-width: 600px) {
@@ -92,19 +87,21 @@
 </head>
 <body>
 
+<!-- ✅ FORM SECTION -->
 <div id="form-section">
   <h2>🧾 E-Bill Input</h2>
-  <input type="text" id="userName" placeholder="Enter Customer Name" />
-  <input type="tel" id="userNumber" placeholder="Enter 10-digit Mobile Number" maxlength="10" pattern="\d{10}" />
+  <input type="text" id="userName" placeholder="Customer Name" />
+  <input type="tel" id="userNumber" placeholder="10-digit Mobile Number" maxlength="10" />
   <input type="text" id="itemTitle" placeholder="Item Title" />
-  <input type="number" id="itemPrice" placeholder="Item Price" />
+  <input type="number" id="itemPrice" placeholder="Item Price (₹)" />
   <button onclick="addItem()">➕ Add Item</button>
-  <button onclick="generatePDF()">💾 Save & Download PDF</button>
-  <button onclick="sendAndDownload()">📤 Send & Download PDF</button>
+  <button onclick="generatePDF()">💾 Download PDF</button>
+  <button onclick="sendAndDownload()">📤 Send via WhatsApp</button>
 </div>
 
+<!-- ✅ BILL SECTION -->
 <div id="bill">
-  <h2>E-Bill</h2>
+  <h2>🧾 Customer E-Bill</h2>
   <p><strong>Name:</strong> <span id="displayName">--</span></p>
   <p><strong>Number:</strong> <span id="displayNumber">--</span></p>
 
@@ -136,13 +133,13 @@
     const title = document.getElementById('itemTitle').value.trim();
     const price = parseFloat(document.getElementById('itemPrice').value.trim());
 
-    if (name) document.getElementById('displayName').innerText = name;
-    if (number) document.getElementById('displayNumber').innerText = "+91 " + number;
-
     if (!title || isNaN(price)) {
-      alert("Please enter a valid item and price.");
+      alert("Please enter valid item and price.");
       return;
     }
+
+    if (name) document.getElementById('displayName').innerText = name;
+    if (number) document.getElementById('displayNumber').innerText = "+91 " + number;
 
     const table = document.getElementById('itemTable');
     const row = table.insertRow();
@@ -163,7 +160,7 @@
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
     html2pdf().from(bill).set(opt).save().then(() => {
@@ -176,12 +173,12 @@
     const validMobile = /^[0-9]{10}$/;
 
     if (!validMobile.test(number)) {
-      alert("Please enter a valid 10-digit mobile number.");
+      alert("Enter valid 10-digit number.");
       return;
     }
 
     generatePDF("E-Bill.pdf", () => {
-      const message = `Hi, here is your E-Bill. Please find the attached document.`;
+      const message = `Hi, your bill is generated. Please find the attached document or download from this website.`;
       const waUrl = `https://wa.me/91${number}?text=${encodeURIComponent(message)}`;
       window.open(waUrl, '_blank');
     });
