@@ -5,9 +5,11 @@
   <title>Professional E-Bill</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
   <style>
     body {
-      font-family: 'Courier New', monospace;
+      font-family: 'Arial', sans-serif;
       margin: 0;
       background-color: #f4f4f4;
       padding: 20px;
@@ -95,13 +97,14 @@
   <input type="text" id="itemTitle" placeholder="Item Title" />
   <input type="number" id="itemPrice" placeholder="Item Price (₹)" />
   <button onclick="addItem()">➕ Add Item</button>
-  <button onclick="generatePDF()">💾 Download PDF</button>
-  <button onclick="sendAndDownload()">📤 Send via WhatsApp</button>
+  <button onclick="generateAndUploadPDF()">💾 Save PDF & Upload</button>
 </div>
 
 <!-- ✅ BILL SECTION -->
 <div id="bill">
   <h2>🧾 Customer E-Bill</h2>
+  <p><strong>Date:</strong> <span id="displayDate">--</span></p>
+  <p><strong>Time:</strong> <span id="displayTime">--</span></p>
   <p><strong>Name:</strong> <span id="displayName">--</span></p>
   <p><strong>Number:</strong> <span id="displayNumber">--</span></p>
 
@@ -124,8 +127,33 @@
 </div>
 
 <script>
+  // Firebase config — replace with your Firebase project config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const storage = firebase.storage();
+
   let count = 1;
   let total = 0;
+
+  function setDateTime() {
+    const now = new Date();
+    const date = now.toLocaleDateString('en-IN');
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const time = `${hours}:${minutes} ${ampm}`;
+    document.getElementById('displayDate').innerText = date;
+    document.getElementById('displayTime').innerText = time;
+  }
 
   function addItem() {
     const name = document.getElementById('userName').value.trim();
@@ -138,6 +166,7 @@
       return;
     }
 
+    if (count === 1) setDateTime();
     if (name) document.getElementById('displayName').innerText = name;
     if (number) document.getElementById('displayNumber').innerText = "+91 " + number;
 
@@ -153,34 +182,24 @@
     document.getElementById('itemPrice').value = "";
   }
 
-  function generatePDF(filename = "E-Bill.pdf", callback = null) {
+  function generateAndUploadPDF() {
     const bill = document.getElementById('bill');
     const opt = {
       margin: 0.5,
-      filename: filename,
+      filename: `E-Bill-${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
-    html2pdf().from(bill).set(opt).save().then(() => {
-      if (callback) callback();
-    });
-  }
-
-  function sendAndDownload() {
-    const number = document.getElementById("userNumber").value.trim();
-    const validMobile = /^[0-9]{10}$/;
-
-    if (!validMobile.test(number)) {
-      alert("Enter valid 10-digit number.");
-      return;
-    }
-
-    generatePDF("E-Bill.pdf", () => {
-      const message = `Hi, your bill is generated. Please find the attached document or download from this website.`;
-      const waUrl = `https://wa.me/91${number}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, '_blank');
+    html2pdf().from(bill).set(opt).outputPdf('blob').then(blob => {
+      const storageRef = storage.ref(`ebills/E-Bill-${Date.now()}.pdf`);
+      storageRef.put(blob).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          alert("PDF Uploaded Successfully! Shareable Link: " + url);
+          window.open("https://wa.me/?text=" + encodeURIComponent(`Hi, your e-bill is ready. Download here: ${url}`));
+        });
+      });
     });
   }
 </script>
