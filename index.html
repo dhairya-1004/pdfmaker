@@ -201,7 +201,7 @@
     };
 
     html2pdf().from(bill).set(opt).save().then(() => {
-      const msg = encodeURIComponent("Hi, your E-Bill is generated. Please check your downloads and send the PDF via WhatsApp.");
+      const msg = encodeURIComponent("Hi, your bill is ready. Please check your downloads and send the attached PDF via WhatsApp.");
       window.open(`https://wa.me/?text=${msg}`, "_blank");
     });
   }
